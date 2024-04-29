@@ -1,0 +1,9 @@
+{
+  "name": "go-server ci",
+  "description": "Containerly OpenAPI go-server CI",
+  "iconName": "go",
+  "categories": [
+    "Continuous Integration",
+    "Go"
+  ]
+}
