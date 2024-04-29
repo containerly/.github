@@ -1,0 +1,6 @@
+{
+  "name": "dynamic html",
+  "description": "Publish OpenAPI Dynamic HTML to GitHub Pages",
+  "iconName": "",
+  "categories": ["Continuous integration", "Dynamic HTML"]
+}
