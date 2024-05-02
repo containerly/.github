@@ -1,0 +1,57 @@
+name: Check GitHub Pages Configurations
+
+on:
+  workflow_dispatch:  # Allows manual triggering of the workflow
+  schedule:
+    - cron: '0 0 * * *'  # Optionally, run this check daily at midnight UTC
+
+jobs:
+  check-pages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required to list and get repository details
+      pages: read     # Required to read pages configuration
+
+    steps:
+      - name: Check all repositories for GitHub Pages configuration
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const org = 'containerly'; // Replace with your organization name
+            const query = `query ($org: String!) {
+              organization(login: $org) {
+                repositories(first: 100) {  # Adjust pagination as necessary
+                  nodes {
+                    name
+                    pagesInfo {
+                      htmlUrl
+                      source {
+                        branch
+                        path
+                      }
+                    }
+                  }
+                }
+              }
+            }`;
+
+            const result = await github.graphql(query, {
+              org: org
+            });
+
+            const repos = result.organization.repositories.nodes;
+            const incorrectlyConfigured = repos.filter(repo => {
+              // Check if GitHub Pages is set up and configured differently than expected
+              return repo.pagesInfo && (repo.pagesInfo.source.branch !== 'main' || repo.pagesInfo.source.path !== '/docs');
+            });
+
+            if (incorrectlyConfigured.length > 0) {
+              console.log("Repositories with incorrect GitHub Pages configuration:");
+              incorrectlyConfigured.forEach(repo => {
+                console.log(`Repository: ${repo.name}, Pages URL: ${repo.pagesInfo.htmlUrl}`);
+              });
+            } else {
+              console.log("All repositories are correctly configured for GitHub Pages.");
+            }
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
