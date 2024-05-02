@@ -1,25 +1,25 @@
-name: Manage GitHub Pages Configuration
+name: Check and Enable GitHub Pages
 
 on:
   workflow_dispatch:
 
 jobs:
-  check-and-update-pages:
+  check-and-enable-pages:
     runs-on: ubuntu-latest
     steps:
-      - name: Check and Update GitHub Pages Configuration
-        uses: actions/github-script@v6
+      - name: Check and Enable GitHub Pages
+        uses: actions/github-script@v5
         with:
-          github-token: ${{ secrets.pages_rw }}
+          github-token: ${{ secrets.PAGES_TOKEN }}
           script: |
             const org = 'containerly'; // Replace with your organization name
-            
+
             // Fetch all repositories in the organization
             const repos = await github.paginate(github.rest.repos.listForOrg, {
               org: org,
-              type: 'public' // Change to 'all' to include private repositories
+              type: 'all' // Change to 'public' to include only public repositories
             });
-            
+
             for (const repo of repos) {
               try {
                 // Fetch the current GitHub Pages configuration
@@ -27,9 +27,9 @@ jobs:
                   owner: org,
                   repo: repo.name
                 });
-            
+
                 // Check if the GitHub Pages are configured to deploy from the 'main' branch and '/docs' folder
-                if (!pagesConfig.source || pagesConfig.source.branch !== 'main' || pagesConfig.source.path !== '/docs') {
+                if (!pagesConfig.data.source || pagesConfig.data.source.branch !== 'main' || pagesConfig.data.source.path !== '/docs') {
                   // Update the configuration if it's not set correctly
                   await github.rest.repos.updateInformationAboutPagesSite({
                     owner: org,
@@ -39,7 +39,7 @@ jobs:
                       path: '/docs'
                     }
                   });
-            
+
                   console.log(`Updated Pages configuration for ${repo.name}`);
                 } else {
                   console.log(`GitHub Pages already configured correctly for ${repo.name}`);
@@ -57,7 +57,6 @@ jobs:
                     }
                   });
                   console.log(`GitHub Pages setup completed for ${repo.name}`);
-                  continue;
                 } else {
                   throw error; // Rethrow other errors that we don't handle
                 }
