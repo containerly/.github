@@ -28,6 +28,17 @@ jobs:
 
             for (const repo of repos) {
               try {
+                // Check if the repository is empty
+                const { data: { size } } = await octokit.rest.repos.get({
+                  owner: org,
+                  repo: repo.name
+                });
+
+                if (size === 0) {
+                  console.log(`Repository ${repo.name} is empty, skipping...`);
+                  continue;
+                }
+
                 // Check if the 'main' branch exists
                 let branchExists = true;
                 try {
