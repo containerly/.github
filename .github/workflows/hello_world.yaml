@@ -1,0 +1,18 @@
+name: Daily and Manual Hello World Workflow
+
+on:
+  schedule:
+    # Runs at 12:00 UTC every day
+    - cron: '0 12 * * *'
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest  # Specifies that the job should run on the latest Ubuntu runner
+
+    steps:
+      - name: Checkout  # Checks out your repository under $GITHUB_WORKSPACE, so the workflow can access it
+        uses: actions/checkout@v3
+
+      - name: Hello World  # Run a single command using the runners shell
+        run: echo "Hello World"
