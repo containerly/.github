@@ -1,38 +1,56 @@
-name: Manage GitHub Pages Configuration
+name: Manage GitHub Pages Configuration Across Organization
 
 on:
   workflow_dispatch:
-  # Trigger manually, or you can set this to trigger on other events.
+  # Allows manual triggering of the workflow.
 
 jobs:
   check-and-update-pages:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+      administration: read
     steps:
       - name: Check and Update GitHub Pages Configuration
         uses: actions/github-script@v6
         with:
           script: |
-            // Fetch GitHub Pages configuration
-            const pagesConfig = await github.rest.repos.getPages({
-              owner: context.repo.owner,
-              repo: context.repo.repo
+            const org = 'your-org-name'; // Replace with your organization name
+
+            // Fetch all repositories in the organization
+            const repos = await github.paginate(github.rest.repos.listForOrg, {
+              org: org,
+              type: 'public' // Change to 'all' to include private repositories
             });
 
-            console.log('Current Pages Configuration:', pagesConfig.data);
+            for (const repo of repos) {
+              try {
+                // Fetch the current GitHub Pages configuration
+                const pagesConfig = await github.rest.repos.getPages({
+                  owner: org,
+                  repo: repo.name
+                });
 
-            // If Pages are not setup to deploy from 'main' branch and '/docs' folder, update them
-            if (pagesConfig.data.source.branch !== 'main' || pagesConfig.data.source.path !== '/docs') {
-              const updateResponse = await github.rest.repos.updateInformationAboutPagesSite({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                source: {
-                  branch: 'main',
-                  path: '/docs'
+                // Check if the GitHub Pages are configured to deploy from the 'main' branch and '/docs' folder
+                if (!pagesConfig.source || pagesConfig.source.branch !== 'main' || pagesConfig.source.path !== '/docs') {
+                  // Update the configuration if it's not set correctly
+                  await github.rest.repos.updateInformationAboutPagesSite({
+                    owner: org,
+                    repo: repo.name,
+                    source: {
+                      branch: 'main',
+                      path: '/docs'
+                    }
+                  });
+
+                  console.log(`Updated Pages configuration for ${repo.name}`);
+                } else {
+                  console.log(`GitHub Pages already configured correctly for ${repo.name}`);
                 }
-              });
-
-              console.log('Updated Pages Configuration:', updateResponse.data);
-            } else {
-              console.log('No update needed, Pages are configured correctly.');
+              } catch (error) {
+                // Handle possible errors, such as no Pages setup on the repository
+                console.error(`Error accessing/updating Pages for ${repo.name}: ${error.message}`);
+              }
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
