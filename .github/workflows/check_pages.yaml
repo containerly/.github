@@ -1,29 +1,25 @@
-name: Manage GitHub Pages Configuration Across Organization
+name: Manage GitHub Pages Configuration
 
 on:
   workflow_dispatch:
-  # Allows manual triggering of the workflow.
+  # Trigger manually, or you can set this to trigger on other events.
 
 jobs:
   check-and-update-pages:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: read
-      administration: read
     steps:
       - name: Check and Update GitHub Pages Configuration
         uses: actions/github-script@v6
         with:
           script: |
             const org = 'your-org-name'; // Replace with your organization name
-
+            
             // Fetch all repositories in the organization
             const repos = await github.paginate(github.rest.repos.listForOrg, {
               org: org,
               type: 'public' // Change to 'all' to include private repositories
             });
-
+            
             for (const repo of repos) {
               try {
                 // Fetch the current GitHub Pages configuration
@@ -31,7 +27,7 @@ jobs:
                   owner: org,
                   repo: repo.name
                 });
-
+            
                 // Check if the GitHub Pages are configured to deploy from the 'main' branch and '/docs' folder
                 if (!pagesConfig.source || pagesConfig.source.branch !== 'main' || pagesConfig.source.path !== '/docs') {
                   // Update the configuration if it's not set correctly
@@ -43,7 +39,7 @@ jobs:
                       path: '/docs'
                     }
                   });
-
+            
                   console.log(`Updated Pages configuration for ${repo.name}`);
                 } else {
                   console.log(`GitHub Pages already configured correctly for ${repo.name}`);
