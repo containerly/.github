@@ -45,8 +45,22 @@ jobs:
                   console.log(`GitHub Pages already configured correctly for ${repo.name}`);
                 }
               } catch (error) {
-                // Handle possible errors, such as no Pages setup on the repository
-                console.error(`Error accessing/updating Pages for ${repo.name}: ${error.message}`);
+                if (error.status === 404) {
+                  console.log(`GitHub Pages not set up for ${repo.name}, setting up now...`);
+                  // Set up GitHub Pages if not already set up
+                  await github.rest.repos.createPagesSite({
+                    owner: org,
+                    repo: repo.name,
+                    source: {
+                      branch: "main",
+                      path: "/docs"
+                    }
+                  });
+                  console.log(`GitHub Pages setup completed for ${repo.name}`);
+                  continue;
+                } else {
+                  throw error; // Rethrow other errors that we don't handle
+                }
               }
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
