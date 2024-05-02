@@ -1,57 +1,38 @@
-name: Check GitHub Pages Configurations
+name: Manage GitHub Pages Configuration
 
 on:
-  workflow_dispatch:  # Allows manual triggering of the workflow
-  schedule:
-    - cron: '0 0 * * *'  # Optionally, run this check daily at midnight UTC
+  workflow_dispatch:
+  # Trigger manually, or you can set this to trigger on other events.
 
 jobs:
-  check-pages:
+  check-and-update-pages:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read  # Required to list and get repository details
-      pages: read     # Required to read pages configuration
-
     steps:
-      - name: Check all repositories for GitHub Pages configuration
+      - name: Check and Update GitHub Pages Configuration
         uses: actions/github-script@v6
         with:
           script: |
-            const org = 'containerly'; // Replace with your organization name
-            const query = `query ($org: String!) {
-              organization(login: $org) {
-                repositories(first: 100) {  # Adjust pagination as necessary
-                  nodes {
-                    name
-                    pagesInfo {
-                      htmlUrl
-                      source {
-                        branch
-                        path
-                      }
-                    }
-                  }
+            // Fetch GitHub Pages configuration
+            const pagesConfig = await github.rest.repos.getPages({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            console.log('Current Pages Configuration:', pagesConfig.data);
+
+            // If Pages are not setup to deploy from 'main' branch and '/docs' folder, update them
+            if (pagesConfig.data.source.branch !== 'main' || pagesConfig.data.source.path !== '/docs') {
+              const updateResponse = await github.rest.repos.updateInformationAboutPagesSite({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                source: {
+                  branch: 'main',
+                  path: '/docs'
                 }
-              }
-            }`;
-
-            const result = await github.graphql(query, {
-              org: org
-            });
-
-            const repos = result.organization.repositories.nodes;
-            const incorrectlyConfigured = repos.filter(repo => {
-              // Check if GitHub Pages is set up and configured differently than expected
-              return repo.pagesInfo && (repo.pagesInfo.source.branch !== 'main' || repo.pagesInfo.source.path !== '/docs');
-            });
-
-            if (incorrectlyConfigured.length > 0) {
-              console.log("Repositories with incorrect GitHub Pages configuration:");
-              incorrectlyConfigured.forEach(repo => {
-                console.log(`Repository: ${repo.name}, Pages URL: ${repo.pagesInfo.htmlUrl}`);
               });
-            } else {
-              console.log("All repositories are correctly configured for GitHub Pages.");
-            }
 
+              console.log('Updated Pages Configuration:', updateResponse.data);
+            } else {
+              console.log('No update needed, Pages are configured correctly.');
+            }
           github-token: ${{ secrets.GITHUB_TOKEN }}
