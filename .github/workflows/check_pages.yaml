@@ -7,23 +7,56 @@ jobs:
   check-and-enable-pages:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
       - name: Check and Enable GitHub Pages
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.PAGES_TOKEN }}
           script: |
             const org = 'containerly'; // Replace with your organization name
+            const octokit = github;
 
             // Fetch all repositories in the organization
-            const repos = await github.paginate(github.rest.repos.listForOrg, {
+            const repos = await octokit.paginate(octokit.rest.repos.listForOrg, {
               org: org,
               type: 'all' // Change to 'public' to include only public repositories
             });
 
             for (const repo of repos) {
               try {
+                // Check if the 'main' branch exists
+                let branchExists = true;
+                try {
+                  await octokit.rest.repos.getBranch({
+                    owner: org,
+                    repo: repo.name,
+                    branch: 'main'
+                  });
+                } catch (error) {
+                  if (error.status === 404) {
+                    branchExists = false;
+                  } else {
+                    throw error;
+                  }
+                }
+
+                // Create the 'main' branch if it does not exist
+                if (!branchExists) {
+                  await octokit.rest.git.createRef({
+                    owner: org,
+                    repo: repo.name,
+                    ref: 'refs/heads/main',
+                    sha: repo.default_branch // Use the SHA of the default branch
+                  });
+                  console.log(`Created 'main' branch for ${repo.name}`);
+                }
+
                 // Fetch the current GitHub Pages configuration
-                const pagesConfig = await github.rest.repos.getPages({
+                const pagesConfig = await octokit.rest.repos.getPages({
                   owner: org,
                   repo: repo.name
                 });
@@ -31,7 +64,7 @@ jobs:
                 // Check if the GitHub Pages are configured to deploy from the 'main' branch and '/docs' folder
                 if (!pagesConfig.data.source || pagesConfig.data.source.branch !== 'main' || pagesConfig.data.source.path !== '/docs') {
                   // Update the configuration if it's not set correctly
-                  await github.rest.repos.updateInformationAboutPagesSite({
+                  await octokit.rest.repos.updateInformationAboutPagesSite({
                     owner: org,
                     repo: repo.name,
                     source: {
@@ -48,7 +81,7 @@ jobs:
                 if (error.status === 404) {
                   console.log(`GitHub Pages not set up for ${repo.name}, setting up now...`);
                   // Set up GitHub Pages if not already set up
-                  await github.rest.repos.createPagesSite({
+                  await octokit.rest.repos.createPagesSite({
                     owner: org,
                     repo: repo.name,
                     source: {
