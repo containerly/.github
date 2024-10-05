@@ -1,0 +1,4 @@
+site_name: GitHub Actions
+nav:
+  - Workflow: workflow-templates/README.md
+  - Workflow Templates: workflow-templates/

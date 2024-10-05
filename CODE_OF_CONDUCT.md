@@ -1,4 +1,4 @@
-Code of Conduct for GitHub Organization Templated Repository
+# Code of Conduct for GitHub Organization Templated Repository
 1. Purpose
    This Code of Conduct aims to promote a positive, inclusive, and respectful environment within our community. It applies to all spaces managed by the organization including GitHub repositories, social media, meetings, and any other forums created by the organization which the community uses for communication.
 
