@@ -1,4 +1,28 @@
-site_name: GitHub Actions
+site_name: GitHub Organization Templates
+
+theme:
+  name: material  # Using the Material theme for a modern look
+
+highlightjs: true
+hljs_languages:
+  - yaml  # Syntax highlighting for YAML files
+
 nav:
-  - Workflow: workflow-templates/README.md
-  - Workflow Templates: workflow-templates/
+  - Home: index.md  # Landing page for your documentation
+  - Code of Conduct: CODE_OF_CONDUCT.md  # Organization's code of conduct
+  - Contributing: CONTRIBUTING.md  # Guidelines for contributing
+  - Support: SUPPORT.md  # How to get support
+  - Security: SECURITY.md  # Security policies and reporting
+  - Issue Templates:
+      - Overview: ISSUE_TEMPLATE/README.md  # Introduction to issue templates
+      - Bug Report: ISSUE_TEMPLATE/bug_report.md  # Template for reporting bugs
+      - Feature Request: ISSUE_TEMPLATE/feature_request.md  # Template for suggesting features
+  - Pull Request Template: PULL_REQUEST_TEMPLATE/pull_request_template.md  # Template for PRs
+  - Funding: FUNDING.md  # Information on supporting the project
+  - Workflows:
+      - Overview: workflows/README.md  # Introduction to workflows
+      - CI Workflow: workflows/ci.md  # Details on the CI workflow
+      - Release Workflow: workflows/release.md  # Details on the release workflow
+  - Workflow Templates:
+      - Guide: workflow-templates/README.md  # Guide on using workflow templates
+  - Organization Profile: profile/README.md  # The organization's GitHub profile README

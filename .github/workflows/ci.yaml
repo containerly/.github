@@ -1,0 +1,13 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    uses: your-org/.github/.github/workflows/ci.yaml@main
+    with:
+      node-version: '18'
