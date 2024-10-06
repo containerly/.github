@@ -1,0 +1,47 @@
+name: Deploy MkDocs Site to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Adjust this to your default branch
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'  # Specify the Python version you need
+
+      - name: Install Dependencies
+        run: |
+          pip install mkdocs
+          pip install -r requirements.txt  # If you have additional requirements
+
+      - name: Build MkDocs Site
+        run: mkdocs build --clean --verbose
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./site  # The directory where MkDocs outputs the site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
